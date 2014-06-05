@@ -40,6 +40,7 @@
 
 #define MAX_CONNECT_STR 4096
 #define MAX_SOCK_RD_BUFSIZE  1024
+#define MAX_SOCK_WR_BUFSIZE  102400 // Send buffer size (Application like Tableau may generate very long query)
 
 #ifdef _DEBUG
 #define EXTRA_DEBUGGING

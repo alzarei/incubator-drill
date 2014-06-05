@@ -66,7 +66,8 @@ typedef enum{
     QRY_OUT_OF_BOUNDS=5,
     QRY_CLIENT_OUTOFMEM=6,
     QRY_INTERNAL_ERROR=7,
-    QRY_COMM_ERROR=8
+    QRY_COMM_ERROR=8,
+    QRY_TIMEOUT=9
 } status_t;
 
 typedef enum{
@@ -74,7 +75,8 @@ typedef enum{
     CONN_FAILURE=1,
     CONN_HANDSHAKE_FAILED=2,
     CONN_INVALID_INPUT=3,
-    CONN_ZOOKEEPER_ERROR=4
+    CONN_ZOOKEEPER_ERROR=4,
+    CONN_HANDSHAKE_TIMEOUT=5
 } connectionStatus_t;
 
 typedef enum{

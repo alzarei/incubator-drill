@@ -290,6 +290,10 @@ connectionStatus_t DrillClient::connect(const char* connectStr, const char* defa
 
 }
 
+
+std::string DrillClient::GetChosenDrillbitHost() { return this->m_pImpl->getDrillbitHost();}
+std::string DrillClient::GetChosenDrillbitPort() { return this->m_pImpl->getDrillbitPort();} 
+
 bool DrillClient::isActive(){
     return this->m_pImpl->Active();
 }

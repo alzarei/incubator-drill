@@ -86,8 +86,6 @@ void DrillClientImpl::parseConnectStr(const char* connectStr,
 
 connectionStatus_t DrillClientImpl::connect(const char* connStr){
     std::string pathToDrill, protocol, hostPortStr;
-    std::string host;
-    std::string port;
     if(!this->m_bIsConnected){
         parseConnectStr(connStr, pathToDrill, protocol, hostPortStr);
         if(!strcmp(protocol.c_str(), "zk")){
@@ -97,18 +95,18 @@ connectionStatus_t DrillClientImpl::connect(const char* connStr){
             }
             zook.debugPrint();
             exec::DrillbitEndpoint e=zook.getEndPoint();
-            host=boost::lexical_cast<std::string>(e.address());
-            port=boost::lexical_cast<std::string>(e.user_port());
+            m_host=boost::lexical_cast<std::string>(e.address());
+            m_port=boost::lexical_cast<std::string>(e.user_port());
             zook.close();
         }else if(!strcmp(protocol.c_str(), "local")){
             char tempStr[MAX_CONNECT_STR+1];
             strncpy(tempStr, hostPortStr.c_str(), MAX_CONNECT_STR); tempStr[MAX_CONNECT_STR]=0;
-            host=strtok(tempStr, ":");
-            port=strtok(NULL, "");
+            m_host=strtok(tempStr, ":");
+            m_port=strtok(NULL, "");
         }else{
             return handleConnError(CONN_INVALID_INPUT, getMessage(ERR_CONN_UNKPROTO, protocol.c_str()));
         }
-        return this->connect(host.c_str(), port.c_str());
+        return this->connect(m_host.c_str(), m_port.c_str());
     }
     return CONN_SUCCESS;
 }
@@ -119,11 +117,14 @@ connectionStatus_t DrillClientImpl::connect(const char* host, const char* port){
     try{
         tcp::resolver resolver(m_io_service);
         tcp::resolver::query query(tcp::v4(), host, port);
+        DRILL_LOG(LOG_TRACE) << "DrillClientImpl::connect: Resolve "
+            << "[host: " << host << ", port:" << port << "]\n";
         tcp::resolver::iterator iter = resolver.resolve(query);
         tcp::resolver::iterator end;
         while (iter != end){
             endpoint = *iter++;
-            DRILL_LOG(LOG_TRACE) << endpoint << std::endl;
+            DRILL_LOG(LOG_TRACE) << "DrillClientImpl::connect: connect to drillbit ["
+                << endpoint << "]\n";
         }
         boost::system::error_code ec;
         m_socket.connect(endpoint, ec);
@@ -174,7 +175,7 @@ connectionStatus_t DrillClientImpl::recvHandshake(){
                     this,
                     boost::asio::placeholders::error
                     ));
-        DRILL_LOG(LOG_TRACE) << "Started new handshake wait timer with "
+        DRILL_LOG(LOG_TRACE) << "Started new handshake wait timer with " 
                 << DrillClientConfig::getHandshakeTimeout() << " seconds." << std::endl;
     }
 
@@ -189,7 +190,7 @@ connectionStatus_t DrillClientImpl::recvHandshake(){
                 boost::asio::placeholders::bytes_transferred)
             );
     DRILL_LOG(LOG_DEBUG) << "Sent handshake read request to server" << std::endl;
-    // blocks until all work has finished and there are no more handlers to be dispatched,
+    // blocks until all work has finished and there are no more handlers to be dispatched, 
     // or until the io_service has been stopped.
     m_io_service.run();
     if(m_rbuf!=NULL){
@@ -215,18 +216,17 @@ void DrillClientImpl::handleHandshake(ByteBuf_t _buf,
             size_t leftover = LEN_PREFIX_BUFLEN - bytes_read;
             ByteBuf_t b=m_rbuf + LEN_PREFIX_BUFLEN;
             size_t bytesToRead=length - leftover;
-			// The client may connect to an endpoint that does not running
-			// drillbit (e.g., port 22 running ssh service) and receive malicious data.
-			// Or drillbit hangs but the port is still open.
-			// We need to set the maximum retry times to avoid stuck into infinite loop.
             int max_retry_times = 3;
-            while(max_retry_times--){
+            while(1){
                 size_t dataBytesRead=m_socket.read_some(
                         boost::asio::buffer(b, bytesToRead),
                         error);
                 if(err) break;
                 DRILL_LOG(LOG_TRACE) << "Handshake Message: actual bytes read = " << dataBytesRead << std::endl;
                 if(dataBytesRead==bytesToRead) break;
+                // Consider the case that some non-drill service sent package back to the drill client,
+                // client may stuck in the infinite loop 
+                if ( !(--max_retry_times) ) break;
                 bytesToRead-=dataBytesRead;
                 b+=dataBytesRead;
             }
@@ -238,7 +238,7 @@ void DrillClientImpl::handleHandshake(ByteBuf_t _buf,
             }
 			DRILL_LOG(LOG_TRACE) << "Handshake Deadline timer cancelled."  << std::endl;
         }else{
-            DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleHandshake: ERR_CONN_RDFAIL. No handshake.\n";
+            DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleHandshake: ERR_CONN_RDFAIL. No handshake.\n"; 
             handleConnError(CONN_FAILURE, getMessage(ERR_CONN_RDFAIL, "No handshake"));
             return;
         }
@@ -248,7 +248,7 @@ void DrillClientImpl::handleHandshake(ByteBuf_t _buf,
 
     }else{
         // boost error
-        DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleHandshake: ERR_CONN_RDFAIL. "<< error.message() << "\n";
+        DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleHandshake: ERR_CONN_RDFAIL. "<< error.message() << "\n"; 
         handleConnError(CONN_FAILURE, getMessage(ERR_CONN_RDFAIL, error.message().c_str()));
         return;
     }
@@ -263,7 +263,7 @@ void DrillClientImpl::handleHShakeReadTimeout(const boost::system::error_code & 
             // The deadline has passed.
             m_deadlineTimer.expires_at(boost::posix_time::pos_infin);
             DRILL_LOG(LOG_TRACE) << "DrillClientImpl::HandleHShakeReadTimeout: Deadline timer expired.\n";
-            DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleHShakeReadTimeout: ERR_CONN_HSHAKETIMOUT.\n";
+            DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleHShakeReadTimeout: ERR_CONN_HSHAKETIMOUT.\n"; 
             handleConnError(CONN_HANDSHAKE_TIMEOUT, getMessage(ERR_CONN_HSHAKETIMOUT));
             m_io_service.stop();
             boost::system::error_code ignorederr;
@@ -275,15 +275,14 @@ void DrillClientImpl::handleHShakeReadTimeout(const boost::system::error_code & 
 
 connectionStatus_t DrillClientImpl::validateHandShake(const char* defaultSchema){
 
-    DRILL_LOG(LOG_TRACE) << "validateHandShake\n";
+    DRILL_LOG(LOG_TRACE) << "validateHandShake (defaultSchema = " << defaultSchema << ")\n";
 
     exec::user::UserToBitHandshake u2b;
     u2b.set_channel(exec::shared::USER);
     u2b.set_rpc_version(DRILL_RPC_VERSION);
     u2b.set_support_listening(true);
 
-    if ( defaultSchema != NULL ){
-        DRILL_LOG(LOG_TRACE) << "defaultSchema = " << defaultSchema << "\n";
+    if ( defaultSchema ){
         exec::user::UserProperties* userProperties = u2b.mutable_properties();
         exec::user::Property* connSchema = userProperties->add_properties();
         connSchema->set_key("schema");
@@ -344,8 +343,10 @@ DrillClientQueryResult* DrillClientImpl::SubmitQuery(::exec::shared::QueryType t
             DRILL_LOG(LOG_DEBUG) << "Number of pending requests = " << m_pendingRequests << std::endl;
         }
         if(sendRequest){
+
             DRILL_LOG(LOG_DEBUG) << "Sending read request. Number of pending requests = "
                 << m_pendingRequests << std::endl;
+
             getNextResult(); // async wait for results
         }
     }
@@ -368,7 +369,7 @@ void DrillClientImpl::getNextResult(){
     // This call is always made from within a function where the mutex has already been acquired
     //boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
     if (DrillClientConfig::getQueryTimeout() > 0){
-        DRILL_LOG(LOG_TRACE) << "Started new query wait timer with "
+        DRILL_LOG(LOG_TRACE) << "Started new query wait timer with " 
                 << DrillClientConfig::getQueryTimeout() << " seconds." << std::endl;
         m_deadlineTimer.expires_from_now(boost::posix_time::seconds(DrillClientConfig::getQueryTimeout()));
         m_deadlineTimer.async_wait(boost::bind(
@@ -420,7 +421,7 @@ status_t DrillClientImpl::readMsg(ByteBuf_t _buf, ByteBuf_t* allocatedBuffer, In
             currentBuffer=Utils::allocateBuffer(rmsgLen);
             if(currentBuffer==NULL){
                 Utils::freeBuffer(_buf);
-                DRILL_LOG(LOG_TRACE) << "DrillClientImpl::readMsg: ERR_QRY_OUTOFMEM.\n";
+                DRILL_LOG(LOG_TRACE) << "DrillClientImpl::readMsg: ERR_QRY_OUTOFMEM" << std::endl;
                 return handleQryError(QRY_CLIENT_OUTOFMEM, getMessage(ERR_QRY_OUTOFMEM), NULL);
             }
             *allocatedBuffer=currentBuffer;
@@ -600,7 +601,7 @@ void DrillClientImpl::handleReadTimeout(const boost::system::error_code & err){
         if (m_deadlineTimer.expires_at() <= boost::asio::deadline_timer::traits_type::now()){
             // The deadline has passed.
             DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleReadTimeout: Deadline timer expired.\n";
-            DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleReadTimeout: ERR_QRY_TIMOUT.\n";
+            DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleReadTimeout: ERR_QRY_TIMOUT.\n"; 
             handleQryError(QRY_TIMEOUT, getMessage(ERR_QRY_TIMOUT), NULL);
             // There is no longer an active deadline. The expiry is set to positive
             // infinity so that the timer never expires until a new deadline is set.
@@ -1126,7 +1127,9 @@ void ZookeeperImpl::watcher(zhandle_t *zzh, int type, int state, const char *pat
 
 void ZookeeperImpl:: debugPrint(){
     if(m_zh!=NULL && m_state==ZOO_CONNECTED_STATE){
-        DRILL_LOG(LOG_TRACE) << m_drillServiceInstance.DebugString() << std::endl;
+        DRILL_LOG(LOG_TRACE)
+            << "Drill Service Instance: [ "
+            << m_drillServiceInstance.DebugString() << " ]\n";
     }
 }
 

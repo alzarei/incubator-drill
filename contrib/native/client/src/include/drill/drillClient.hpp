@@ -100,23 +100,22 @@ class DECLSPEC_DRILL_CLIENT DrillClientConfig{
         // For future use. Currently, not enforced.
         static uint64_t s_bufferLimit;
 
-        /**
-         * DrillClient configures timeout (in seconds) in a fine granularity.
-		 * Disabled by setting the value to zero.
+        /** 
+         * DrillClient can configure timeout (in seconds) for a fine granuality
          *
          * s_socketTimout: (default 0)
-         *      set SO_RCVTIMEO and SO_SNDTIMEO socket options and place a
-		 *		timeout on socket receives and sends. It is disabled by default.
+         *      set SO_RCVTIMEO and SO_SNDTIMEO socket options and place a timout on 
+         *      socket receives and sends. It is disabled by setting it value to 0.
          *
-         * s_handshakeTimeout: (default 5)
-         *      place a timeout on validating handshake. When an endpoint (host:port)
-		 *		is reachable but drillbit hangs or running another service. It will
-		 *		avoid the client hanging.
+         * s_handshakeTimeout:
+         *      place a timeout on validating handshake. When an endpoint (host:port) is 
+         *      reachable but drillbit fails or does not exist, the timeout will avoid the 
+         *      client hanging.
          *
          * s_queryTimeout: (default 180)
-         *      place a timeout on waiting result of querying.
+         *      place a timeout on waiting result of querying. 
          */
-        static int32_t s_socketTimeout;
+        static int32_t s_socketTimeout;        
         static int32_t s_handshakeTimeout;
         static int32_t s_queryTimeout;
         static boost::mutex s_mutex;
@@ -283,6 +282,9 @@ class DECLSPEC_DRILL_CLIENT DrillClient{
          * once the RecordIterator is no longer being processed.
          */
         void freeQueryIterator(RecordIterator** pIter){ delete *pIter; *pIter=NULL;};
+
+        std::string GetChosenDrillbitHost();
+        std::string GetChosenDrillbitPort();
 
     private:
         static DrillClientInitializer s_init;

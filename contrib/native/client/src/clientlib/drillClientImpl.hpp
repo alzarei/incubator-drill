@@ -20,16 +20,21 @@
 #ifndef DRILL_CLIENT_IMPL_H
 #define DRILL_CLIENT_IMPL_H
 
-// http://www.boost.org/doc/libs/1_54_0/doc/html/boost_asio/reference/basic_stream_socket/cancel/overload1.html
-// For portable cancellation, use
-//#define BOOST_ASIO_ENABLE_CANCELIO
-
+/* Define some BOOST defines */
+/*
+#ifdef ENABLE_DEADLINE_TIMER
+#define BOOST_ASIO_ENABLE_CANCELIO
+#endif
+*/
 // If we want to support older versions of windows than Windows 7, we should
 // disable IOCP
-//#ifdef _WIN32
-//#define BOOST_ASIO_DISABLE_IOCP
-//#endif // _WIN32
-
+/*
+#if defined(_WIN32) && !defined(_WIN64)
+#ifndef BOOST_ASIO_DISABLE_IOCP
+#define BOOST_ASIO_DISABLE_IOCP
+#endif
+#endif // _WIN32
+*/
 
 #include "drill/common.hpp"
 #include "drill/drillClient.hpp"
@@ -228,6 +233,8 @@ class DrillClientImpl{
         DrillClientQueryResult* SubmitQuery(::exec::shared::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx);
         void waitForResults();
         connectionStatus_t validateHandShake(const char* defaultSchema);
+        std::string getDrillbitHost(){ return m_host;}
+        std::string getDrillbitPort(){ return m_port;} 
 
     private:
         friend class DrillClientQueryResult;
@@ -268,13 +275,16 @@ class DrillClientImpl{
         void sendAck(InBoundRpcMessage& msg);
         void sendCancel(InBoundRpcMessage& msg);
 
-
         static RpcEncoder s_encoder;
         static RpcDecoder s_decoder;
 
         int32_t m_coordinationId;
         int32_t m_handshakeVersion;
         bool m_bIsConnected;
+
+        // the host:port zk chosen
+        std::string m_host;
+        std::string m_port;
 
         // number of outstanding read requests.
         // handleRead will keep asking for more results as long as this number is not zero.
@@ -291,8 +301,7 @@ class DrillClientImpl{
         boost::asio::io_service m_io_service;
         boost::asio::ip::tcp::socket m_socket;
         boost::asio::deadline_timer m_deadlineTimer; // to timeout async queries that never return
-
-		//for synchronous messages, like validate handshake
+        //for synchronous messages, like validate handshake
         ByteBuf_t m_rbuf; // buffer for receiving synchronous messages
         ByteBuf_t m_wbuf; // buffer for sending synchronous message
 

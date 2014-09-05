@@ -351,6 +351,10 @@ DrillClientQueryResult* DrillClientImpl::SubmitQuery(::exec::shared::QueryType t
 
     //run this in a new thread
     {
+        // TODO: fix this. this one is just a workaround always wait for a new thread
+        if(this->m_pListenerThread!=NULL){
+            this->waitForResults();
+        }
         if(this->m_pListenerThread==NULL){
             // reset io_service before running
             m_io_service.reset();
@@ -402,10 +406,12 @@ void DrillClientImpl::getNextResult(){
 }
 
 void DrillClientImpl::waitForResults(){
-    this->m_pListenerThread->join();
-    DRILL_LOG(LOG_DEBUG) << "DrillClientImpl::waitForResults: Listener thread "
-        << this->m_pListenerThread << " exited." << std::endl;
-    delete this->m_pListenerThread; this->m_pListenerThread=NULL;
+    if( this->m_pListenerThread != NULL) {
+        this->m_pListenerThread->join();
+        DRILL_LOG(LOG_DEBUG) << "DrillClientImpl::waitForResults: Listener thread "
+            << this->m_pListenerThread << " exited." << std::endl;
+        delete this->m_pListenerThread; this->m_pListenerThread=NULL;
+    }
 }
 
 status_t DrillClientImpl::readMsg(ByteBuf_t _buf,

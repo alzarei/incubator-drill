@@ -19,6 +19,7 @@
 #include "drill/common.hpp"
 #include "drill/recordBatch.hpp"
 #include "utils.hpp"
+#include "drill/protobuf/User.pb.h"
 
 const int32_t YEARS_TO_MONTHS=12;
 const int32_t DAYS_TO_MILLIS=24*60*60*1000;

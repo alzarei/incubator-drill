@@ -73,7 +73,13 @@ typedef enum{
     QRY_CLIENT_OUTOFMEM=6,
     QRY_INTERNAL_ERROR=7,
     QRY_COMM_ERROR=8,
-    QRY_TIMEOUT=9
+    QRY_TIMEOUT=9,
+    QRY_PENDING = 10, // should we align the status with QueryState?
+    QRY_RUNNING = 11,
+	QRY_COMPLETED = 12,
+	QRY_CANCELED = 13,
+	QRY_FAILED = 14, // NOT USED
+	QRY_UNKNOWN_QUERY = 15 // NOT USED
 } status_t;
 
 typedef enum{

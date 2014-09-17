@@ -61,6 +61,7 @@ Drill::status_t SchemaListener(void* ctx, Drill::FieldDefPtr fields, Drill::Dril
 
 Drill::status_t QueryResultsListener(void* ctx, Drill::RecordBatch* b, Drill::DrillClientError* err){
     if(!err){
+        if(b==NULL) return Drill::QRY_SUCCESS;
         b->print(std::cout, 0); // print all rows
         delete b; // we're done with this batch, we can delete it
         if(bTestCancel){

@@ -123,6 +123,8 @@ class DrillClientQueryResult{
     bool hasError(){ return m_bHasError;}
     status_t getErrorStatus(){ return m_pError!=NULL?(status_t)m_pError->status:QRY_SUCCESS;}
     const DrillClientError* getError(){ return m_pError;}
+    void setQueryStatus(status_t s){ m_status = s;}
+    status_t getQueryStatus(){ return m_status;}
 
     private:
     status_t setupColumnDefs(exec::shared::QueryResult* pQueryResult);
@@ -163,6 +165,7 @@ class DrillClientQueryResult{
     const DrillClientError* m_pError;
 
     exec::shared::QueryId* m_pQueryId;
+    status_t m_status;
 
     // Schema change listener
     pfnSchemaListener m_pSchemaListener;

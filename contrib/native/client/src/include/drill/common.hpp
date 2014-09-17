@@ -71,7 +71,13 @@ typedef enum{
     QRY_OUT_OF_BOUNDS=5,
     QRY_CLIENT_OUTOFMEM=6,
     QRY_INTERNAL_ERROR=7,
-    QRY_COMM_ERROR=8
+    QRY_COMM_ERROR=8,
+    QRY_PENDING = 9,
+    QRY_RUNNING = 10,
+    QRY_COMPLETED = 11,
+	QRY_CANCELED = 12,
+	QRY_FAILED = 13,
+	QRY_UNKNOWN_QUERY = 14
 } status_t;
 
 typedef enum{

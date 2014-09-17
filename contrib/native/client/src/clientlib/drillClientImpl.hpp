@@ -253,9 +253,9 @@ class DrillClientImpl{
         // Query results
         void getNextResult();
         status_t readMsg(
-                ByteBuf_t _buf, 
-                AllocatedBufferPtr* allocatedBuffer, 
-                InBoundRpcMessage& msg, 
+                ByteBuf_t _buf,
+                AllocatedBufferPtr* allocatedBuffer,
+                InBoundRpcMessage& msg,
                 boost::system::error_code& error);
         status_t processQueryResult(AllocatedBufferPtr allocatedBuffer, InBoundRpcMessage& msg);
         status_t processQueryId(AllocatedBufferPtr allocatedBuffer, InBoundRpcMessage& msg );

@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include "drillClientImpl.hpp"
 
 #include "drill/common.hpp"
 #include <queue>
@@ -25,16 +26,10 @@
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
-#ifdef _WIN32
-#include <zookeeper.h>
-#else
-#include <zookeeper/zookeeper.h>
-#endif
 #include <boost/assign.hpp>
 
 #include "drill/drillClient.hpp"
 #include "drill/recordBatch.hpp"
-#include "drillClientImpl.hpp"
 #include "errmsgs.hpp"
 #include "logger.hpp"
 #include "rpcEncoder.hpp"

@@ -23,7 +23,7 @@
 #include <vector>
 #include <boost/thread.hpp>
 #include "drill/common.hpp"
-#include "drill/protobuf/types.pb.h"
+#include "drill/protobuf/Types.pb.h"
 
 
 #if defined _WIN32 || defined __CYGWIN__
@@ -44,16 +44,14 @@
   #endif
 #endif
 
-namespace exec
-{
-    namespace shared
-    {
+namespace exec{
+    namespace shared{
         class DrillPBError;
         enum QueryType;
     };
 };
 
-namespace Drill {
+namespace Drill{
 
 //struct UserServerEndPoint;
 class  DrillClientImpl;
@@ -62,11 +60,11 @@ class  FieldMetadata;
 class  RecordBatch;
 class  SchemaDef;
 
-    enum QueryType {
-        SQL = 1,
-        LOGICAL = 2,
-        PHYSICAL = 3
-    };
+enum QueryType{
+    SQL = 1,
+    LOGICAL = 2,
+    PHYSICAL = 3
+};
 
 class DECLSPEC_DRILL_CLIENT DrillClientError{
     public:

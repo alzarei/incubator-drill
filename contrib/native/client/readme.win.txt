@@ -35,7 +35,7 @@ Windows platforms should be more or less similar.
     Note: For 64 bit builds, change the platform toolset to Windows SDK for your
     project.
     (Root node, i.e. the projectname) Properties ->Configuration Properties->General->Platform Toolset = Windows7.1SDK
-    If your are running Windows 7 and having problem isntalling windows SDK follow the instructions here http://stackoverflow.com/questions/19366006/error-when-installing-windows-sdk-7-1
+    If you are running Windows 7 and having problem isntalling windows SDK follow the instructions here http://stackoverflow.com/questions/19366006/error-when-installing-windows-sdk-7-1
 
 1.3 [Optional] Windows Driver kit 
     The Windows Driver kit is required to get the 64 bit assembler ml64. The

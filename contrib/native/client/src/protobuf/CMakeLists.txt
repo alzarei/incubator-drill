@@ -58,7 +58,7 @@ set (PROTO_CPPHDR_FILES
     ${PROTO_HDR_DIR}/BitData.pb.h
     ${PROTO_HDR_DIR}/ExecutionProtos.pb.h
     ${PROTO_HDR_DIR}/SchemaDef.pb.h
-	${PROTO_HDR_DIR}/User.pb.h
+    ${PROTO_HDR_DIR}/User.pb.h
     )
 
 set (PROTO_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../include/drill/protobuf)

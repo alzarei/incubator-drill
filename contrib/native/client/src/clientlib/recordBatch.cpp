@@ -382,13 +382,11 @@ void RecordBatch::print(std::ostream& s, size_t num){
         s<<values<<std::endl;
     }
 }
-size_t RecordBatch::getNumFields() 
-{
+size_t RecordBatch::getNumFields(){
     return m_pRecordBatchDef->field_size(); 
 }
 
-bool RecordBatch::isLastChunk() 
-{
+bool RecordBatch::isLastChunk(){
     return m_pQueryResult->is_last_chunk(); 
 }
 

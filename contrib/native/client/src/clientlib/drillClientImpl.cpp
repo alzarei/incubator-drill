@@ -488,10 +488,11 @@ status_t DrillClientImpl::readMsg(ByteBuf_t _buf,
 status_t DrillClientImpl::processQueryResult(AllocatedBufferPtr  allocatedBuffer, InBoundRpcMessage& msg ){
     DrillClientQueryResult* pDrillClientQueryResult=NULL;
     status_t ret=QRY_SUCCESS;
+	exec::shared::QueryId qid;
     // Be a good client and send ack as early as possible.
     // Drillbit pushed the query result to the client, the client should send ack
     // whenever it receives the message
-    sendAck(msg);
+    sendAck(msg, true);
     {
         boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
         exec::shared::QueryResult* qr = new exec::shared::QueryResult; //Record Batch will own this object and free it up.
@@ -502,7 +503,6 @@ status_t DrillClientImpl::processQueryResult(AllocatedBufferPtr  allocatedBuffer
 
         DRILL_LOG(LOG_DEBUG) << "Searching for Query Id - " << debugPrintQid(qr->query_id()) << std::endl;
 
-        exec::shared::QueryId qid;
         qid.CopyFrom(qr->query_id());
         std::map<exec::shared::QueryId*, DrillClientQueryResult*, compareQueryId>::iterator it;
         it=this->m_queryResults.find(&qid);
@@ -603,7 +603,7 @@ status_t DrillClientImpl::processQueryResult(AllocatedBufferPtr  allocatedBuffer
         }
     } // release lock
     if(ret==QRY_FAILURE){
-        sendCancel(msg);
+        sendCancel(&qid);
         {
             boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
             m_pendingRequests--;
@@ -845,21 +845,20 @@ void DrillClientImpl::clearMapEntries(DrillClientQueryResult* pQueryResult){
     }
 }
 
-void DrillClientImpl::sendAck(InBoundRpcMessage& msg){
+void DrillClientImpl::sendAck(InBoundRpcMessage& msg, bool isOk){
     exec::rpc::Ack ack;
-    ack.set_ok(true);
+    ack.set_ok(isOk);
     OutBoundRpcMessage ack_msg(exec::rpc::RESPONSE, exec::user::ACK, msg.m_coord_id, &ack);
     boost::lock_guard<boost::mutex> lock(m_dcMutex);
     sendSync(ack_msg);
     DRILL_LOG(LOG_TRACE) << "ACK sent" << std::endl;
 }
 
-void DrillClientImpl::sendCancel(InBoundRpcMessage& msg){
-    exec::rpc::Ack ack;
-    ack.set_ok(true);
-    OutBoundRpcMessage ack_msg(exec::rpc::RESPONSE, exec::user::CANCEL_QUERY, msg.m_coord_id, &ack);
+void DrillClientImpl::sendCancel(exec::shared::QueryId* pQueryId){
     boost::lock_guard<boost::mutex> lock(m_dcMutex);
-    sendSync(ack_msg);
+    uint64_t coordId = this->getNextCoordinationId();
+    OutBoundRpcMessage cancel_msg(exec::rpc::REQUEST, exec::user::CANCEL_QUERY, coordId, pQueryId);
+    sendSync(cancel_msg);
     DRILL_LOG(LOG_TRACE) << "CANCEL sent" << std::endl;
 }
 

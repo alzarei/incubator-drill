@@ -96,5 +96,5 @@ link_directories(/usr/local/lib)
 
 add_executable(querySubmitter example/querySubmitter.cpp )
 
-target_link_libraries(querySubmitter ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} drillClient protomsgs y2038)
-#target_link_libraries(querySubmitter drillClient)
+#target_link_libraries(querySubmitter ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} drillClient protomsgs y2038)
+target_link_libraries(querySubmitter drillClient)

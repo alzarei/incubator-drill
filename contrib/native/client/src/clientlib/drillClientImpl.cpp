@@ -509,7 +509,7 @@ status_t DrillClientImpl::processQueryResult(AllocatedBufferPtr  allocatedBuffer
         if(it!=this->m_queryResults.end()){
             pDrillClientQueryResult=(*it).second;
         }else{
-            assert(0);
+            //assert(0);
             //assert might be compiled away in a release build. So return an error to the app.
             DRILL_LOG(LOG_TRACE) << "DrillClientImpl::processQueryResult: ERR_QRY_OUTOFORDER.\n";
             status_t ret= handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_OUTOFORDER), NULL);
@@ -735,7 +735,7 @@ void DrillClientImpl::handleRead(ByteBuf_t _buf,
                 return;
             }else{
                 //If not QUERY_RESULT, then we think something serious has gone wrong?
-                assert(0);
+                //assert(0);
                 DRILL_LOG(LOG_TRACE) << "DrillClientImpl::handleRead: ERR_QRY_INVRPCTYPE. "
                     << "QueryResult returned " << msg.m_rpc_type << std::endl;
                 handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVRPCTYPE, msg.m_rpc_type), NULL);

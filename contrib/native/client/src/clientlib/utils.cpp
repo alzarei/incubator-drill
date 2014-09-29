@@ -44,14 +44,20 @@ ByteBuf_t Utils::allocateBuffer(size_t len){
 void Utils::freeBuffer(ByteBuf_t b, size_t len){ 
     DRILL_LOG(LOG_TRACE) << "Free Buffer [ " 
         << reinterpret_cast<int*>(b)<< ", size = " << len << " ]\n";
-    boost::lock_guard<boost::mutex> memLock(AllocatedBuffer::s_memCVMutex);
-    AllocatedBuffer::s_allocatedMem-=len;
-    free(b);
-    size_t safeSize= DrillClientConfig::getBufferLimit()-MEM_CHUNK_SIZE;
-    if(b!=NULL && AllocatedBuffer::s_allocatedMem < safeSize){
-        AllocatedBuffer::s_isBufferLimitReached=false;
-        //signal any waiting threads
-        AllocatedBuffer::s_memCV.notify_one();
+    try{
+        boost::lock_guard<boost::mutex> memLock(AllocatedBuffer::s_memCVMutex);
+        AllocatedBuffer::s_allocatedMem-=len;
+        free(b);
+        size_t safeSize= DrillClientConfig::getBufferLimit()-MEM_CHUNK_SIZE;
+        if(b!=NULL && AllocatedBuffer::s_allocatedMem < safeSize){
+            AllocatedBuffer::s_isBufferLimitReached=false;
+            //signal any waiting threads
+            AllocatedBuffer::s_memCV.notify_one();
+        }
+    }
+    catch(boost::lock_error& e){
+        DRILL_LOG(LOG_ERROR) << "Utils::freeBuffer: Cannot acquire the memLock s_memCVMutex."
+            << " Exception caugut: " << e.what() << std::endl; 
     }
 }
 

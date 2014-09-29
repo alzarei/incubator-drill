@@ -41,7 +41,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     #set(CMAKE_EXE_LINKER_FLAGS "-lrt -lpthread")
-    set(CMAKE_CXX_FLAGS "-fPIC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif()
 if(MSVC)
     set(CMAKE_CXX_FLAGS "/EHsc")

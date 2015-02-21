@@ -349,4 +349,9 @@ void DrillClient::freeQueryResources(QueryHandle_t* handle){
     *handle=NULL;
 }
 
+void DrillClient::freeRecordBatch(RecordBatch* pRecordBatch){
+    delete pRecordBatch;
+    pRecordBatch=NULL;
+}
+
 } // namespace Drill
